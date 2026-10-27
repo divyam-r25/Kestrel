@@ -12,12 +12,19 @@ test('files.search finds by name, respects roots, skips symlinks', async () => {
   mkdirSync(join(a.dir, 'sem5/dbms'), { recursive: true });
   writeFileSync(join(a.dir, 'sem5/dbms/DBMS_unit1.pdf'), 'x');
   writeFileSync(join(a.dir, 'sem5/readme.txt'), 'x');
-  symlinkSync('/etc', join(a.dir, 'sem5/link_to_etc'));
+  // Try to create a symlink; on Windows without admin/DevMode it will fail – skip that part gracefully
+  let symlinkCreated = false;
+  try {
+    symlinkSync(process.platform === 'win32' ? 'C:\\Windows' : '/etc', join(a.dir, 'sem5/link_to_etc'), 'junction');
+    symlinkCreated = true;
+  } catch { /* no symlink privileges on this machine – skip symlink assertion */ }
   const r = await a.registry.invoke('files.search', { query: 'dbms', root: a.dir }, new Session());
   assert.equal(r.ok, true);
-  assert.equal(r.result.matches.length, 2); // folder + file
+  assert.equal(r.result.matches.length, 2); // folder + file (symlink skipped whether present or not)
   assert.ok(r.evidence.length === 2 && r.limits.length >= 2);
-  const out = await a.registry.invoke('files.search', { query: 'passwd', root: '/etc' }, new Session());
+  // Path-escape guard always works regardless of symlink support
+  const escapePath = process.platform === 'win32' ? 'C:\\Windows' : '/etc';
+  const out = await a.registry.invoke('files.search', { query: 'hosts', root: escapePath }, new Session());
   assert.equal(out.ok, false);
   assert.match(out.error.message, /outside the folders/);
   a.cleanup();

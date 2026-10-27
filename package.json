@@ -1,0 +1,13 @@
+{
+  "name": "kestrel-assistant",
+  "version": "0.1.0",
+  "description": "Local-first, privacy-first personal AI assistant core: skills with permission tiers, tamper-evident audit log, prompt-injection containment.",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=22.5" },
+  "bin": { "kestrel": "./bin/kestrel.js" },
+  "scripts": {
+    "test": "node --no-warnings --test test/*.test.js",
+    "start": "node --no-warnings bin/kestrel.js"
+  }
+}
